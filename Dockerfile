@@ -49,4 +49,8 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-CMD ["node", "server.js"]
+# Next.js standalone `server.js` binds to `process.env.HOSTNAME` when set.
+# In Docker Swarm, HOSTNAME resolves to the container IP on its "primary" network,
+# which can make the server listen only on one interface. Force 0.0.0.0 so the
+# service is reachable from all attached overlay networks (e.g. reverse proxy).
+CMD ["sh", "-lc", "PORT=3000 HOSTNAME=0.0.0.0 exec node server.js"]
